@@ -220,7 +220,7 @@ export const aiService = {
   /**
    * Performs a comprehensive analysis of a CV against a job description.
    */
-  async analyzeCv(cvText: string, jobDesc: string, candidateName: string): Promise<AnalysisResult> {
+  async analyzeCv(cvText: string, jobDesc: string, candidateName: string = "Candidate"): Promise<AnalysisResult> {
     const prompt = COMPREHENSIVE_ANALYSIS_PROMPT
       .replace("{cvText}", cvText.slice(0, CV_SLICE_LENGTH))
       .replace("{jobDescription}", jobDesc)
