@@ -1,0 +1,73 @@
+import { Prisma } from "@prisma/client";
+export declare const candidateRepository: {
+    findProfileByUserId(userId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        location: string | null;
+        skills: string[];
+        cvUrl: string | null;
+        cvFileName: string | null;
+        headline: string | null;
+        bio: string | null;
+        linkedinUrl: string | null;
+        githubUrl: string | null;
+        portfolioUrl: string | null;
+        profilePictureUrl: string | null;
+        extractedSkills: string[];
+        recommendationCache: Prisma.JsonValue | null;
+        lastRecommendedAt: Date | null;
+        jobAnalysisCache: Prisma.JsonValue | null;
+    } | null>;
+    upsertProfile(userId: string, data: {
+        cvUrl?: string | null;
+        cvFileName?: string | null;
+        extractedSkills?: string[];
+        skills?: string[];
+        bio?: string | null;
+        headline?: string | null;
+        location?: string | null;
+        profilePictureUrl?: string | null;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        location: string | null;
+        skills: string[];
+        cvUrl: string | null;
+        cvFileName: string | null;
+        headline: string | null;
+        bio: string | null;
+        linkedinUrl: string | null;
+        githubUrl: string | null;
+        portfolioUrl: string | null;
+        profilePictureUrl: string | null;
+        extractedSkills: string[];
+        recommendationCache: Prisma.JsonValue | null;
+        lastRecommendedAt: Date | null;
+        jobAnalysisCache: Prisma.JsonValue | null;
+    }>;
+    clearResume(userId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        location: string | null;
+        skills: string[];
+        cvUrl: string | null;
+        cvFileName: string | null;
+        headline: string | null;
+        bio: string | null;
+        linkedinUrl: string | null;
+        githubUrl: string | null;
+        portfolioUrl: string | null;
+        profilePictureUrl: string | null;
+        extractedSkills: string[];
+        recommendationCache: Prisma.JsonValue | null;
+        lastRecommendedAt: Date | null;
+        jobAnalysisCache: Prisma.JsonValue | null;
+    }>;
+};
+//# sourceMappingURL=candidate.repository.d.ts.map

@@ -1,0 +1,2 @@
+export declare const logger: (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse<import("node:http").IncomingMessage>, callback: (err?: Error) => void) => void;
+//# sourceMappingURL=logger.d.ts.map

@@ -1,0 +1,94 @@
+import { UpdateProfileInput } from "./profile.validation";
+export declare const profileRepository: {
+    findByUserId(userId: string): Promise<{
+        user: {
+            id: string;
+            email: string;
+            firstName: string | null;
+            lastName: string | null;
+        };
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyName: string;
+        registrationFileUrl: string;
+        registrationFileName: string;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        rejectionReason: string | null;
+        companyDescription: string | null;
+        companyLogoUrl: string | null;
+        companyWebsite: string | null;
+        companyLocation: string | null;
+        coverImageUrl: string | null;
+        industry: string | null;
+        companyType: string | null;
+        companySize: string | null;
+        foundedYear: number | null;
+        specialties: string | null;
+        linkedInUrl: string | null;
+        facebookUrl: string | null;
+        twitterUrl: string | null;
+        googleCalendarConnected: boolean;
+    } | null>;
+    updateGoogleTokensByUserId(userId: string, data: any): Promise<{
+        user: {
+            id: string;
+            email: string;
+            firstName: string | null;
+            lastName: string | null;
+        };
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyName: string;
+        registrationFileUrl: string;
+        registrationFileName: string;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        rejectionReason: string | null;
+        companyDescription: string | null;
+        companyLogoUrl: string | null;
+        companyWebsite: string | null;
+        companyLocation: string | null;
+        coverImageUrl: string | null;
+        industry: string | null;
+        companyType: string | null;
+        companySize: string | null;
+        foundedYear: number | null;
+        specialties: string | null;
+        linkedInUrl: string | null;
+        facebookUrl: string | null;
+        twitterUrl: string | null;
+        googleCalendarConnected: boolean;
+    }>;
+    updateByUserId(userId: string, data: UpdateProfileInput): Promise<{
+        user: {
+            id: string;
+            email: string;
+            firstName: string | null;
+            lastName: string | null;
+        };
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyName: string;
+        registrationFileUrl: string;
+        registrationFileName: string;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+        rejectionReason: string | null;
+        companyDescription: string | null;
+        companyLogoUrl: string | null;
+        companyWebsite: string | null;
+        companyLocation: string | null;
+        coverImageUrl: string | null;
+        industry: string | null;
+        companyType: string | null;
+        companySize: string | null;
+        foundedYear: number | null;
+        specialties: string | null;
+        linkedInUrl: string | null;
+        facebookUrl: string | null;
+        twitterUrl: string | null;
+        googleCalendarConnected: boolean;
+    }>;
+};
+//# sourceMappingURL=profile.repository.d.ts.map

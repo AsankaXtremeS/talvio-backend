@@ -1,0 +1,10 @@
+process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
+process.env.JWT_SECRET = "test-secret";
+process.env.JWT_REFRESH_SECRET = "test-refresh-secret";
+process.env.SMTP_HOST = "smtp.test.com";
+process.env.SMTP_USER = "test@test.com";
+process.env.SMTP_PASS = "test-pass";
+process.env.GEMINI_API_KEY = "test-gemini-key";
+process.env.GROQ_API_KEY = "test-groq-key";
+process.env.MISTRAL_API_KEY = "test-mistral-key";
+process.env.OPENROUTER_API_KEY = "test-openrouter-key";

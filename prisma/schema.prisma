@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  password            String?
+  role                Role
+  isVerified          Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  firstName           String?
+  lastName            String?
+  authAccounts        AuthAccount[]
+  candidateProfile    CandidateProfile?
+  employerProfile     EmployerProfile?
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
+  verificationTokens  VerificationToken[]
+}
+
+model AuthAccount {
+  id             String       @id @default(uuid())
+  provider       AuthProvider
+  providerUserId String
+  accessToken    String?
+  refreshToken   String?
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmployerProfile {
+  id                         String             @id @default(uuid())
+  userId                     String             @unique
+  companyName                String
+  registrationFileUrl        String
+  registrationFileName       String
+  verificationStatus         VerificationStatus @default(PENDING)
+  rejectionReason            String?
+  companyDescription         String?
+  companyLogoUrl             String?
+  companyWebsite             String?
+  companyLocation            String?
+  coverImageUrl              String?
+  industry                   String?
+  companyType                String?
+  companySize                String?
+  foundedYear                Int?
+  specialties                String?
+  linkedInUrl                String?
+  facebookUrl                String?
+  twitterUrl                 String?
+  googleAccessToken          String?
+  googleRefreshToken         String?
+  googleTokenExpiry          BigInt?
+  googleCalendarConnected    Boolean            @default(false)
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+  calendarProvider           String?
+  microsoftAccessToken       String?
+  microsoftCalendarConnected Boolean            @default(false)
+  microsoftRefreshToken      String?
+  microsoftTokenExpiry       BigInt?
+  user                       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviews                 Interview[]
+  jobPosts                   JobPost[]
+}
+
+model JobPost {
+  id                    String           @id @default(uuid())
+  title                 String
+  type                  JobType
+  description           String?
+  requirements          String[]
+  responsibilities      String[]
+  skillsRequired        String[]
+  additionalInformation String?
+  workMode              WorkMode?
+  employmentType        EmploymentType?
+  stipendType           StipendType?
+  location              String?
+  duration              String?
+  experienceLevel       ExperienceLevel?
+  closingDate           DateTime?
+  status                PostStatus       @default(DRAFT)
+  employerId            String
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  applications          Application[]
+  interviews            Interview[]
+  employer              EmployerProfile  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([workMode, type])
+}
+
+model CandidateProfile {
+  id                  String        @id @default(uuid())
+  userId              String        @unique
+  headline            String?
+  location            String?
+  skills              String[]      @default([])
+  bio                 String?
+  linkedinUrl         String?
+  githubUrl           String?
+  portfolioUrl        String?
+  cvUrl               String?
+  cvFileName          String?
+  profilePictureUrl   String?
+  extractedSkills     String[]      @default([])
+  recommendationCache Json?
+  lastRecommendedAt   DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  jobAnalysisCache    Json?         @default("{}")
+  applications        Application[]
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviews          Interview[]
+}
+
+model Application {
+  id                 String                     @id @default(uuid())
+  candidateProfileId String
+  jobPostId          String
+  cvUrl              String
+  cvFileName         String?
+  coverLetter        String?
+  aiScore            Int?
+  aiSuggestions      String[]                   @default([])
+  applicationStatus  ApplicationStatus          @default(PENDING)
+  appliedAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  isReviewed         Boolean                    @default(false)
+  isShortlisted      Boolean                    @default(false)
+  candidateProfile   CandidateProfile           @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  jobPost            JobPost                    @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  statusHistory      ApplicationStatusHistory[]
+
+  @@unique([candidateProfileId, jobPostId])
+  @@index([jobPostId, aiScore])
+  @@index([aiScore])
+  @@index([candidateProfileId, appliedAt])
+  @@index([applicationStatus])
+}
+
+model ApplicationStatusHistory {
+  id            String            @id @default(uuid())
+  applicationId String
+  status        ApplicationStatus
+  changedAt     DateTime          @default(now())
+  note          String?
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+model Interview {
+  id                       String               @id @default(uuid())
+  employerId               String
+  candidateProfileId       String
+  jobPostId                String
+  scheduledAt              DateTime
+  meetingType              InterviewMeetingType
+  status                   InterviewStatus      @default(DRAFT)
+  location                 String?
+  meetingLink              String?
+  additionalInfo           String?
+  emailBody                String?
+  googleCalendarEventId    String?
+  googleCalendarLink       String?
+  candidateEmail           String
+  emailSentAt              DateTime?
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  cancelledAt              DateTime?
+  cancellationReason       String?
+  rescheduledFromId        String?
+  rescheduledToId          String?
+  microsoftCalendarEventId String?
+  microsoftCalendarLink    String?
+  candidate                CandidateProfile     @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  employer                 EmployerProfile      @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  jobPost                  JobPost              @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  rescheduledFrom          Interview?           @relation("RescheduleFrom", fields: [rescheduledFromId], references: [id])
+  rescheduledInterviews    Interview[]          @relation("RescheduleFrom")
+  rescheduledTo            Interview?           @relation("RescheduleTo", fields: [rescheduledToId], references: [id])
+  reschedulesToInterviews  Interview[]          @relation("RescheduleTo")
+
+  @@index([employerId])
+  @@index([employerId, status])
+  @@index([employerId, scheduledAt])
+  @@index([candidateProfileId])
+  @@index([jobPostId])
+}
+
+enum Role {
+  STUDENT
+  PROFESSIONAL
+  EMPLOYER
+  ADMIN
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  LINKEDIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum JobType {
+  JOB
+  INTERNSHIP
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+enum WorkMode {
+  ON_SITE
+  REMOTE
+  HYBRID
+}
+
+enum StipendType {
+  PAID
+  UNPAID
+  NEGOTIABLE
+}
+
+enum ExperienceLevel {
+  ENTRY
+  MID
+  SENIOR
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
+
+enum PostStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum InterviewMeetingType {
+  ONLINE
+  ONSITE
+  PHONE
+}
+
+enum InterviewStatus {
+  DRAFT
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
