@@ -42,6 +42,7 @@ export class ApplicationsService {
       where: { userId },
       update: {},
       create: { userId },
+      include: { user: true },
     });
 
     // 2. Fetch Job Details for AI analysis
@@ -82,8 +83,12 @@ export class ApplicationsService {
     try {
       const cvText = await aiService.extractCvText(finalCvUrl);
       const fullJd = `${jobPost.title}\n${jobPost.description}\n${jobPost.requirements.join("\n")}`;
+      const candidateName = [candidateProfile.user?.firstName, candidateProfile.user?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || "Candidate";
       
-      const analysis = await aiService.analyzeCv(cvText, fullJd);
+      const analysis = await aiService.analyzeCv(cvText, fullJd, candidateName);
       aiScore = analysis.overallScore;
       aiSuggestions = analysis.suggestions;
       
