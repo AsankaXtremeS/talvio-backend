@@ -1,4 +1,4 @@
-FROM node:20-slim AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -7,7 +7,7 @@ RUN npx prisma generate      # <-- generates @prisma/client so tsc can compile
 COPY . .
 RUN npm run build
 
-FROM node:20-slim
+FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
