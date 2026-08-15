@@ -20,18 +20,27 @@ morgan.token("pathNoQuery", (req) => (req as Request).originalUrl.split("?")[0])
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl)
     if (!origin) return callback(null, true);
-    // In development allow any localhost port
+
+    const allowed = (process.env.CORS_ORIGIN ?? '')
+      .split(',')
+      .map(s => s.trim());
+
+    // wildcard allows everything
+    if (allowed.includes('*')) return callback(null, true);
+
+    // dev convenience: any localhost port
     if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
-    // In production match exact CORS_ORIGIN
-    if (origin === process.env.CORS_ORIGIN) return callback(null, true);
+
+    if (allowed.includes(origin)) return callback(null, true);
+
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
