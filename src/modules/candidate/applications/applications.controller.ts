@@ -56,13 +56,15 @@ export const applyForJob = async (req: Request, res: Response) => {
     if (Array.isArray(jobPostId)) jobPostId = jobPostId[0];
 
   
-    const { cvUrl, cvFileName, coverLetter, useDefaultCv } = req.body;
+    const { cvUrl, cvFileName, coverLetter, useDefaultCv, aiScore, aiSuggestions } = req.body;
 
     const application = await applicationsService.applyToJob(userId, jobPostId as string, {
       cvUrl,
       cvFileName,
       coverLetter,
       useDefaultCv,
+      aiScore: typeof aiScore === "number" ? aiScore : undefined,
+      aiSuggestions: Array.isArray(aiSuggestions) ? aiSuggestions : undefined,
     });
 
     res.status(201).json({

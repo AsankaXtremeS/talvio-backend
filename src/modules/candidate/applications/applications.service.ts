@@ -2,6 +2,7 @@ import { prisma } from "../../../config/db";
 import { candidateRepository } from "../candidate.repository";
 import { applicationsRepository } from "./applications.repository";
 import { aiService } from "../../ai/ai.service";
+import { aiRepository } from "../../ai/ai.repository";
 
 const prismaAny = prisma as any;
 
@@ -36,7 +37,18 @@ export class ApplicationsService {
     };
   }
 
-  async applyToJob(userId: string, jobPostId: string, data: { cvUrl?: string; cvFileName?: string; coverLetter?: string; useDefaultCv?: boolean }) {
+  async applyToJob(
+    userId: string,
+    jobPostId: string,
+    data: {
+      cvUrl?: string;
+      cvFileName?: string;
+      coverLetter?: string;
+      useDefaultCv?: boolean;
+      aiScore?: number;
+      aiSuggestions?: string[];
+    }
+  ) {
     // 1. Ensure candidate profile exists
     const candidateProfile = await prisma.candidateProfile.upsert({
       where: { userId },
@@ -48,6 +60,13 @@ export class ApplicationsService {
     // 2. Fetch Job Details for AI analysis
     const jobPost = await prisma.jobPost.findUnique({
       where: { id: jobPostId },
+      include: {
+        employer: {
+          select: {
+            companyName: true,
+          },
+        },
+      },
     });
     if (!jobPost) throw new Error("Job post not found");
 
@@ -75,30 +94,60 @@ export class ApplicationsService {
 
     if (existing) throw new Error("Already applied to this job");
 
-    // 5. Trigger AI Analysis (Score + Suggestions + Cover Letter if not provided)
-    let aiScore = undefined;
+    // 5. Trigger or Retrieve AI Analysis (Score + Suggestions + Cover Letter if not provided)
+    let aiScore: number | undefined = undefined;
     let aiSuggestions: string[] = [];
     let finalCoverLetter = data.coverLetter;
 
-    try {
-      const cvText = await aiService.extractCvText(finalCvUrl);
-      const fullJd = `${jobPost.title}\n${jobPost.description}\n${jobPost.requirements.join("\n")}`;
-      const candidateName = [candidateProfile.user?.firstName, candidateProfile.user?.lastName]
-        .filter(Boolean)
-        .join(" ")
-        .trim() || "Candidate";
-      
-      const analysis = await aiService.analyzeCv(cvText, fullJd, candidateName);
-      aiScore = analysis.overallScore;
-      aiSuggestions = analysis.suggestions;
-      
-      // If user didn't provide a cover letter, we can use the AI generated one
-      if (!finalCoverLetter) {
-        finalCoverLetter = analysis.coverLetter;
+    if (typeof data.aiScore === "number") {
+      // 5a. Explicit score passed from frontend (from AI Suggestion preview)
+      aiScore = data.aiScore;
+      aiSuggestions = Array.isArray(data.aiSuggestions) ? data.aiSuggestions : [];
+    } else {
+      // 5b. Retrieve from cache if candidate generated suggestions earlier
+      const cachedAnalysis = await aiRepository.findAnalysisInCache(userId, jobPostId);
+
+      if (cachedAnalysis && typeof cachedAnalysis.overallScore === "number") {
+        aiScore = cachedAnalysis.overallScore;
+        aiSuggestions = cachedAnalysis.suggestions || [];
+        if (!finalCoverLetter && cachedAnalysis.coverLetter) {
+          finalCoverLetter = cachedAnalysis.coverLetter;
+        }
+      } else {
+        // 5c. Fallback: Generate AI analysis using standardized prompt format
+        try {
+          const cvText = await aiService.extractCvText(finalCvUrl);
+          const companyName = jobPost.employer?.companyName || "the company";
+          const jobDescription = [
+            `Job Title: ${jobPost.title}`,
+            `Company: ${companyName}`,
+            jobPost.description,
+            `Skills: ${jobPost.skillsRequired?.join(", ") || ""}`,
+          ].join("\n");
+
+          const candidateName = [
+            candidateProfile.user?.firstName,
+            candidateProfile.user?.lastName,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || "Candidate";
+
+          const analysis = await aiService.analyzeCv(cvText, jobDescription, candidateName);
+          aiScore = analysis.overallScore;
+          aiSuggestions = analysis.suggestions;
+
+          // Save to cache as well
+          await aiRepository.updateAnalysisCache(userId, jobPostId, analysis);
+
+          if (!finalCoverLetter) {
+            finalCoverLetter = analysis.coverLetter;
+          }
+        } catch (error) {
+          console.error("AI Analysis failed during application:", error);
+          // We still allow application to proceed even if AI fails (robustness)
+        }
       }
-    } catch (error) {
-      console.error("AI Analysis failed during application:", error);
-      // We still allow application to proceed even if AI fails (robustness)
     }
 
     // 6. Create Application Record with initial history
